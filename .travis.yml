@@ -7,50 +7,36 @@ python:
   - "nightly"
   - "pypy3"
 
+env:
+  - TOXENV=py
+
 # Test the nightly build of cpython, but ignore any failures.
 # Add separate test environments for the docs and flake8 linter.
 matrix:
   allow_failures:
     - python: "nightly"
   include:
-    - env: BUILD=docs
+    - env: TOXENV=docs
       python: 3.7
-    - env: BUILD=spelling
+    - env: TOXENV=spelling
       python: 3.7
-    - env: BUILD=linter
+    - env: TOXENV=linter
       python: 3.8
-    - env: BUILD=pkglint
+    - env: TOXENV=pkglint
       python: 3.8
 
 # Pull all of the history so we can use reno
 git:
   depth: false
 
-# travis pre-installs some packages that may conflict with our test
-# dependencies, so remove them before we set ourselves up. Also
-# install pbr to avoid any setup_requires funkiness with
-# pip/setuptools.
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y enchant
-  - pip uninstall -y nose mock
+  - sudo apt-get -y install libenchant1c2a
 
 install:
-  - pip install pbr tox tox-travis
-  - pip install .[test] .[linter]
+  - pip install tox
 
 script:
-  # Conditional builds (related to env passed)
-  - |
-    case ${BUILD} in
-        docs|pep8|cover|linter|spelling)
-            tox -e ${BUILD}
-            ;;
-        *)
-            tox
-            ;;
-    esac
-
+  - tox
 
 deploy:
   on:
